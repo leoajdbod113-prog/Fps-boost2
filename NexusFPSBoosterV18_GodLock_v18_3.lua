@@ -31,6 +31,50 @@ local HttpService = game:GetService("HttpService")
 local Player = Players.LocalPlayer
 
 --==================================================
+-- NEXUS BOOT GUARD / V18.3 FIX
+-- Mostra feedback mesmo se alguma parte posterior do script falhar.
+--==================================================
+local NexusBootGui = Instance.new("ScreenGui")
+NexusBootGui.Name = "NexusV183BootGuard"
+NexusBootGui.ResetOnSpawn = false
+NexusBootGui.IgnoreGuiInset = true
+pcall(function()
+	NexusBootGui.Parent = game:GetService("CoreGui")
+end)
+if not NexusBootGui.Parent and Player and Player:FindFirstChildOfClass("PlayerGui") then
+	NexusBootGui.Parent = Player:FindFirstChildOfClass("PlayerGui")
+end
+
+local NexusBootLabel = Instance.new("TextLabel")
+NexusBootLabel.Size = UDim2.fromOffset(360, 42)
+NexusBootLabel.Position = UDim2.new(0.5, -180, 0, 12)
+NexusBootLabel.BackgroundColor3 = Color3.fromRGB(25, 18, 35)
+NexusBootLabel.BackgroundTransparency = 0.08
+NexusBootLabel.TextColor3 = Color3.fromRGB(240, 235, 250)
+NexusBootLabel.Text = "NEXUS V18.3 • iniciando..."
+NexusBootLabel.TextSize = 13
+NexusBootLabel.Font = Enum.Font.GothamBold
+NexusBootLabel.ZIndex = 999
+NexusBootLabel.Parent = NexusBootGui
+
+local NexusBootCorner = Instance.new("UICorner")
+NexusBootCorner.CornerRadius = UDim.new(0, 8)
+NexusBootCorner.Parent = NexusBootLabel
+
+local NexusBootStroke = Instance.new("UIStroke")
+NexusBootStroke.Color = Color3.fromRGB(180, 60, 255)
+NexusBootStroke.Thickness = 1.5
+NexusBootStroke.Parent = NexusBootLabel
+
+local function NexusBootStatus(msg)
+	pcall(function()
+		NexusBootLabel.Text = "NEXUS V18.3 • " .. tostring(msg)
+	end)
+end
+
+NexusBootStatus("serviços OK")
+
+--==================================================
 -- COLORS
 --==================================================
 
@@ -703,6 +747,10 @@ local function UpdateDuelCamera(dt)
 		if CameraWasLocked then
 			CameraWasLocked = false
 			LastCameraPosition = nil
+			if Camera and PreviousCameraType then
+				pcall(function() Camera.CameraType = PreviousCameraType end)
+				PreviousCameraType = nil
+			end
 		end
 		return
 	end
@@ -1848,6 +1896,11 @@ end)
 if SpeedEnabled then
 	task.defer(ApplySpeed)
 end
+NexusBootStatus("GUI criada • V18.3 FIX")
+task.delay(2, function()
+	pcall(function() NexusBootGui:Destroy() end)
+end)
+
 RefreshAimControls()
 RefreshFlyControls()
 
@@ -2040,3 +2093,13 @@ task.spawn(function()
 end)
 
 print("NEXUS FPS BOOSTER V11 MAX+ iniciado.")
+
+
+--==================================================
+-- FINAL SAFETY
+--==================================================
+pcall(function()
+	if AimLockEnabled then
+		DisableLockOn()
+	end
+end)
